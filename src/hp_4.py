@@ -8,27 +8,70 @@ from collections import defaultdict
 def reformat_dates(old_dates):
     """Accepts a list of date strings in format yyyy-mm-dd, re-formats each
     element to a format dd mmm yyyy--01 Jan 2001."""
-    pass
+    old_format = "%Y-%m-%d"
+    new_format = "%d %b %Y"
+    new_dates = [datetime.strptime(date,old_format).strftime(new_format) for date in old_dates]
+    return new_dates
 
 
 def date_range(start, n):
     """For input date string `start`, with format 'yyyy-mm-dd', returns
     a list of of `n` datetime objects starting at `start` where each
     element in the list is one day after the previous."""
-    pass
+    new_dates = []
+    date_obj = datetime.strptime(start,'%Y-%m-%d')
+    for val in range(0,n):
+        new_dates.append(date_obj + timedelta(days=val))
+    return new_dates
 
 
 def add_date_range(values, start_date):
     """Adds a daily date range to the list `values` beginning with
     `start_date`.  The date, value pairs are returned as tuples
     in the returned list."""
-    pass
+    new_dates = []
+    date_obj = datetime.strptime(start_date,'%Y-%m-%d')
+    for index,val in enumerate(values):
+        new_date = date_obj + timedelta(days=index)
+        new_dates.append((new_date,val))
+    return new_dates
+        
 
 
 def fees_report(infile, outfile):
     """Calculates late fees per patron id and writes a summary report to
     outfile."""
-    pass
+    with open(infile,'r') as file:
+        patrons_list = []
+        dr_obj = DictReader(file)
+        for item in dr_obj:
+            patron_dict = dict()
+            no_of_days = datetime.strptime(item['date_returned'],'%m/%d/%Y') - datetime.strptime(item['date_due'],'%m/%d/%Y')
+            if no_of_days.days > 0:
+                patron_dict['patron_id'] = item['patron_id']
+                patron_dict['late_fees'] = round(no_of_days.days*0.25,2)
+                patrons_list.append(patron_dict)
+            else:
+                patron_dict['patron_id'] = item['patron_id']
+                patron_dict['late_fees'] = float(0)
+                patrons_list.append(patron_dict)
+
+        aggregated_data = dict()
+        for patron in patrons_list:
+            aggregated_data[patron['patron_id']] = aggregated_data.get(patron['patron_id'],0) + patron['late_fees']
+        patrons_late_fee_list = [{'patron_id':k, 'late_fees':v} for k,v in aggregated_data.items()]
+        for p in patrons_late_fee_list:
+            for k,v in p.items():
+                if k == 'late_fees':
+                    if len(str(v).split('.')[-1]) != 2:
+                        p[k] = str(v) + '0'
+        with open(outfile,'w',newline='') as file:
+            col = ['patron_id','late_fees']
+            writer = DictWriter(file,fieldnames=col)
+            writer.writeheader()
+            writer.writerows(patrons_late_fee_list)
+                
+    
 
 
 # The following main selection block will only run when you choose
