@@ -47,14 +47,15 @@ def fees_report(infile, outfile):
         for item in dr_obj:
             patron_dict = dict()
             no_of_days = datetime.strptime(item['date_returned'],'%m/%d/%Y') - datetime.strptime(item['date_due'],'%m/%d/%Y')
-            if no_of_days.days == 0:
-                patron_dict['patron_id'] = item['patron_id']
-                patron_dict['late_fees'] = float(0)
-                patrons_list.append(patron_dict)
-            else:
+            if no_of_days.days > 0:
                 patron_dict['patron_id'] = item['patron_id']
                 patron_dict['late_fees'] = round(no_of_days.days*0.25,2)
                 patrons_list.append(patron_dict)
+            else:
+                patron_dict['patron_id'] = item['patron_id']
+                patron_dict['late_fees'] = float(0)
+                patrons_list.append(patron_dict)
+
         aggregated_data = dict()
         for patron in patrons_list:
             aggregated_data[patron['patron_id']] = aggregated_data.get(patron['patron_id'],0) + patron['late_fees']
