@@ -21,7 +21,7 @@ def date_range(start, n):
     new_dates = []
     date_obj = datetime.strptime(start,'%Y-%m-%d')
     for val in range(0,n):
-        new_dates.append(date_obj.timedelta(days=val))
+        new_dates.append(date_obj + timedelta(days=val))
     return new_dates
 
 
@@ -56,7 +56,7 @@ def fees_report(infile, outfile):
                 patron_dict['late_fees'] = round(no_of_days.days*0.25,2)
                 patrons_list.append(patron_dict)
         aggregated_data = dict()
-        for patron in patron_list:
+        for patron in patrons_list:
             aggregated_data[patron['patron_id']] = aggregated_data.get(patron['patron_id'],0) + patron['late_fees']
         patrons_late_fee_list = [{'patron_id':k, 'late_fees':v} for k,v in aggregated_data.items()]
         for p in patrons_late_fee_list:
